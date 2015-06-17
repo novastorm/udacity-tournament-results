@@ -125,5 +125,12 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    standings = playerStandings()
 
+    # split standings into two list and remerge to form new list pairing
+    # every other record
+    result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
+        zip(standings[0::2],standings[1::2]))
+
+    return result
 
