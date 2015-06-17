@@ -85,6 +85,7 @@ def playerStandings():
             ON matches.winner_id = players.id
             OR matches.challenger_id = players.id
         GROUP BY players.id
+        ORDER BY wins DESC, matches, players.id
         '''
     sth.execute(query)
     result = sth.fetchall()
