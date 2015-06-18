@@ -78,7 +78,11 @@ def playerStandings():
         SELECT
             players.id,
             players.name,
-            COUNT(CASE WHEN matches.winner_id = players.id THEN 1 ELSE NULL END) AS wins,
+            COUNT(
+                CASE WHEN matches.winner_id = players.id
+                    THEN 1
+                    ELSE NULL
+                END) AS wins,
             COUNT(matches.id) AS matches
         FROM players
         LEFT JOIN matches
@@ -127,8 +131,9 @@ def swissPairings():
     """
     standings = playerStandings()
 
-    # split standings into two list and remerge to form new list pairing
-    # every other record
+    # pairing every other record by spliting standings into two lists,
+    # one of even elements, the other of odd elements. zip together the
+    # results and map to create the output format
     result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
         zip(standings[0::2],standings[1::2]))
 
