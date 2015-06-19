@@ -4,6 +4,9 @@
 #
 
 import psycopg2
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
 
 
 def connect():
@@ -119,7 +122,7 @@ def reportMatch(winner, loser, tied=None):
     dbh.commit()
     dbh.close()
 
-def getPlayerOpponents():
+def __getPlayerOpponents():
     """Returns list of opponents for all players
     """
     dbh = connect()
@@ -150,6 +153,36 @@ def getPlayerOpponents():
 
     return result
 
+def __getStandingGroups():
+    """Returns a list of standings grouped by win, tie, loss
+
+    Assuming standings are provided ordered by win, tie, loss, each standings
+    group contains players with equivalent standings
+
+    Returns:
+      A list of sets, each of which contains ()
+    """
+    standings = playerStandings()
+
+    standings_groups = []
+    group = set()
+    # set initial standings
+    (win, tie, loss) = standings[0][2:5]
+    for player in standings:
+        # test if player standings does not match current standings
+        if ((win, tie, loss) != player[2:5]):
+            # append current player group to the standings group
+            standings_groups.append(group.copy())
+            # set new standings
+            (win, tie, loss) = player[2:5]
+            # reset group
+            group.clear()
+        # add (player id, player name) to group of players
+        group.add(player[0:2])
+    # add last group to standings_groups
+    standings_groups.append(group.copy())
+
+    return standings_groups
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -166,15 +199,47 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    opponents = {id:set(cid_list) for (id, name, cid_list) in getPlayerOpponents()}
-    print opponents
-    standings = playerStandings()
+
+    # reduce opponents to a dictionary of player_id and the set of their
+    # previously played opponent_id
+    opponents = {}
+    for (id, name, cid_list) in __getPlayerOpponents():
+        opponents[id] = set(cid_list)
+
+    print("opponents")
+    pp.pprint(opponents)
+
+    standings_groups = __getStandingGroups()
+    print("standings_groups")
+    pp.pprint(standings_groups)
+
+    pending_players = set()
+    pending_players.update(set(standings_groups.pop(0)))
+    pairs = []
+    player = None
+    challenger = None
+    while len(pending_players) > 0:
+        print "pending_players"
+        pp.pprint(pending_players)
+        player = pending_players.pop()
+        # if pending players == 1 add players from next group
+        if len(pending_players) == 0 and len(standings_groups) > 0:
+                pending_players.update(set(standings_groups.pop(0)))
+        challenger = pending_players.pop()
+        if len(pending_players) == 0 and len(standings_groups) > 0:
+                pending_players.update(set(standings_groups.pop(0)))
+
+        print "player, challenger", (player, challenger)
+        pairs.append((player[0], player[1], challenger[0], challenger[1]))
+        print "pairs"
+        pp.pprint(pairs)
 
     # pairing every other record by spliting standings into two lists,
     # one of even elements, the other of odd elements. zip together the
     # results and map to create the output format
-    result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
-        zip(standings[0::2],standings[1::2]))
+    # result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
+    #     zip(standings[0::2],standings[1::2]))
 
-    return result
+
+    return pairs
 

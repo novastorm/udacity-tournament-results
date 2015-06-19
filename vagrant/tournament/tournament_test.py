@@ -123,11 +123,9 @@ def testPairings():
     registerPlayer("Stella Icewind")
     standings = playerStandings()
     # pp.pprint(standings)
-    pairings = swissPairings()
+    # pairings = swissPairings()
     # pp.pprint(pairings)
     [id1, id2, id3, id4, id5, id6, id7, id8] = [row[0] for row in standings]
-    pairings = swissPairings()
-    pp.pprint(pairings)
     reportMatch(id1, id2)
     reportMatch(id3, id4)
     reportMatch(id5, id6, True)
@@ -135,31 +133,33 @@ def testPairings():
     standings = playerStandings()
     # pp.pprint(standings)
 
-    reportMatch(id1, id3)
     pairings = swissPairings()
+    print "pairings"
     pp.pprint(pairings)
-
 
     if len(pairings) != 4:
         raise ValueError(
             "For eight players, swissPairings should return four pairs.")
-    correct_pairs = set([
-        frozenset([id1, id3]),
-        frozenset([id5, id6]),
-        frozenset([id7, id8]),
-        frozenset([id2, id4])
-        ])
-
     actual_pairs = set(map(
         lambda (p_id, p_name, c_id, c_name) : frozenset([p_id, c_id]),
             pairings
         ))
-    pp.pprint(correct_pairs)
+    print "actual pairs"
     pp.pprint(actual_pairs)
-    if correct_pairs != actual_pairs:
+
+    correct_pairs = set([
+        frozenset([id1, id3]), # 1-0-0 paired
+        frozenset([id2, id4])  # 0-0-1 paired
+        ])
+    print "correct pairs"
+    pp.pprint(correct_pairs)
+    if not correct_pairs.issubset(actual_pairs):
         raise ValueError(
             "After one match, players with one win should be paired.")
+
     print "8. After one match, players with one win are paired."
+
+
 
 
 if __name__ == '__main__':
