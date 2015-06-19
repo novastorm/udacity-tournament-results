@@ -119,6 +119,36 @@ def reportMatch(winner, loser, tied=None):
     dbh.commit()
     dbh.close()
 
+def getPlayerOpponents():
+    """Returns list of opponents for all players
+    """
+    dbh = connect()
+    sth = dbh.cursor()
+    query = '''
+        WITH opponents AS (
+            SELECT players.id, players.name, challenger_id
+            FROM players
+            JOIN matches
+                ON matches.winner_id = players.id
+            UNION
+            SELECT players.id, players.name, winner_id AS challenger_id
+            FROM players
+            JOIN matches
+                ON matches.challenger_id = players.id
+        )
+        SELECT
+            opponents.id,
+            opponents.name,
+            array_agg(challenger_id) AS challenger_id_list
+        FROM opponents
+        GROUP BY opponents.id, opponents.name
+        '''
+    sth.execute(query)
+    result = sth.fetchall()
+    dbh.commit()
+    dbh.close()
+    return result
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -135,6 +165,7 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    opponents = getPlayerOpponents()
     standings = playerStandings()
 
     # pairing every other record by spliting standings into two lists,
