@@ -97,7 +97,7 @@ def testReportMatches():
     reportMatch(id3, id4)
     reportMatch(id5, id6, True)
     standings = playerStandings()
-    pp.pprint(standings)
+    # pp.pprint(standings)
     for (i, n, w, m, t) in standings:
         if m != 1:
             raise ValueError("Each player should have one match recorded.")
@@ -122,18 +122,24 @@ def testPairings():
     registerPlayer("Swift Felblade")
     registerPlayer("Stella Icewind")
     standings = playerStandings()
-    pp.pprint(standings)
+    # pp.pprint(standings)
+    pairings = swissPairings()
+    # pp.pprint(pairings)
+    [id1, id2, id3, id4, id5, id6, id7, id8] = [row[0] for row in standings]
     pairings = swissPairings()
     pp.pprint(pairings)
-    [id1, id2, id3, id4, id5, id6, id7, id8] = [row[0] for row in standings]
     reportMatch(id1, id2)
     reportMatch(id3, id4)
     reportMatch(id5, id6, True)
     reportMatch(id7, id8, True)
     standings = playerStandings()
-    pp.pprint(standings)
+    # pp.pprint(standings)
+
+    reportMatch(id1, id3)
     pairings = swissPairings()
     pp.pprint(pairings)
+
+
     if len(pairings) != 4:
         raise ValueError(
             "For eight players, swissPairings should return four pairs.")
@@ -143,8 +149,18 @@ def testPairings():
         (pid5, pname5, pid6, pname6),
         (pid7, pname7, pid8, pname8)
     ] = pairings
-    correct_pairs = set([frozenset([id1, id3]), frozenset([id2, id4])])
-    actual_pairs = set([frozenset([pid1, pid2]), frozenset([pid7, pid8])])
+    correct_pairs = set([
+        frozenset([id1, id3]),
+        frozenset([id5, id6]),
+        frozenset([id7, id8]),
+        frozenset([id2, id4])
+        ])
+    actual_pairs = set([
+        frozenset([pid1, pid2]),
+        frozenset([pid3, pid4]),
+        frozenset([pid5, pid6]),
+        frozenset([pid7, pid8])
+        ])
     pp.pprint(correct_pairs)
     pp.pprint(actual_pairs)
     if correct_pairs != actual_pairs:
