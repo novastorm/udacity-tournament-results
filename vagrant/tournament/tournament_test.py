@@ -136,8 +136,6 @@ def testPairings():
     # pp.pprint(standings)
 
     reportMatch(id1, id3)
-    opponents = getPlayerOpponents()
-    pp.pprint(opponents)
     pairings = swissPairings()
     pp.pprint(pairings)
 
@@ -145,24 +143,17 @@ def testPairings():
     if len(pairings) != 4:
         raise ValueError(
             "For eight players, swissPairings should return four pairs.")
-    [
-        (pid1, pname1, pid2, pname2),
-        (pid3, pname3, pid4, pname4),
-        (pid5, pname5, pid6, pname6),
-        (pid7, pname7, pid8, pname8)
-    ] = pairings
     correct_pairs = set([
         frozenset([id1, id3]),
         frozenset([id5, id6]),
         frozenset([id7, id8]),
         frozenset([id2, id4])
         ])
-    actual_pairs = set([
-        frozenset([pid1, pid2]),
-        frozenset([pid3, pid4]),
-        frozenset([pid5, pid6]),
-        frozenset([pid7, pid8])
-        ])
+
+    actual_pairs = set(map(
+        lambda (p_id, p_name, c_id, c_name) : frozenset([p_id, c_id]),
+            pairings
+        ))
     pp.pprint(correct_pairs)
     pp.pprint(actual_pairs)
     if correct_pairs != actual_pairs:
