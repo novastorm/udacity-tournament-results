@@ -147,6 +147,7 @@ def getPlayerOpponents():
     result = sth.fetchall()
     dbh.commit()
     dbh.close()
+
     return result
 
 
@@ -165,7 +166,8 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    opponents = getPlayerOpponents()
+    opponents = {id:set(cid_list) for (id, name, cid_list) in getPlayerOpponents()}
+    print opponents
     standings = playerStandings()
 
     # pairing every other record by spliting standings into two lists,
