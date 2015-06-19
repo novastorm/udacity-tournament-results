@@ -15,5 +15,5 @@ CREATE TABLE matches (
     id serial PRIMARY KEY,
     winner_id int references players,
     challenger_id int references players,
-    tie boolean default FALSE
+    tie boolean default NULL
 );

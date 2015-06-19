@@ -3,6 +3,9 @@
 # Test cases for tournament.py
 
 from tournament import *
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
 
 def testDeleteMatches():
     deleteMatches()
@@ -67,9 +70,9 @@ def testStandingsBeforeMatches():
                          "they have played any matches.")
     elif len(standings) > 2:
         raise ValueError("Only registered players should appear in standings.")
-    if len(standings[0]) != 4:
-        raise ValueError("Each playerStandings row should have four columns.")
-    [(id1, name1, wins1, matches1), (id2, name2, wins2, matches2)] = standings
+    if len(standings[0]) != 5:
+        raise ValueError("Each playerStandings row should have five columns.")
+    [(id1, name1, wins1, matches1, ties1), (id2, name2, wins2, matches2, ties2)] = standings
     if matches1 != 0 or matches2 != 0 or wins1 != 0 or wins2 != 0:
         raise ValueError(
             "Newly registered players should have no matches or wins.")
@@ -86,18 +89,24 @@ def testReportMatches():
     registerPlayer("Boots O'Neal")
     registerPlayer("Cathy Burton")
     registerPlayer("Diane Grant")
+    registerPlayer("Gillian Jewelsteel")
+    registerPlayer("Donner Greystalker")
     standings = playerStandings()
-    [id1, id2, id3, id4] = [row[0] for row in standings]
+    [id1, id2, id3, id4, id5, id6] = [row[0] for row in standings]
     reportMatch(id1, id2)
     reportMatch(id3, id4)
+    reportMatch(id5, id6, True)
     standings = playerStandings()
-    for (i, n, w, m) in standings:
+    pp.pprint(standings)
+    for (i, n, w, m, t) in standings:
         if m != 1:
             raise ValueError("Each player should have one match recorded.")
-        if i in (id1, id3) and w != 1:
+        if i in (id1, id3) and t == 0 and w != 1:
             raise ValueError("Each match winner should have one win recorded.")
-        elif i in (id2, id4) and w != 0:
+        if i in (id2, id4) and t == 0 and w != 0:
             raise ValueError("Each match loser should have zero wins recorded.")
+        elif i in (id5, id6) and t != 1:
+            raise ValueError("Each tied match player should have one tie recorded.")
     print "7. After a match, players have updated standings."
 
 
@@ -108,17 +117,36 @@ def testPairings():
     registerPlayer("Fluttershy")
     registerPlayer("Applejack")
     registerPlayer("Pinkie Pie")
+    registerPlayer("Daimbert Oxcloud")
+    registerPlayer("Elaisse Gemkiss")
+    registerPlayer("Swift Felblade")
+    registerPlayer("Stella Icewind")
     standings = playerStandings()
-    [id1, id2, id3, id4] = [row[0] for row in standings]
+    pp.pprint(standings)
+    pairings = swissPairings()
+    pp.pprint(pairings)
+    [id1, id2, id3, id4, id5, id6, id7, id8] = [row[0] for row in standings]
     reportMatch(id1, id2)
     reportMatch(id3, id4)
+    reportMatch(id5, id6, True)
+    reportMatch(id7, id8, True)
+    standings = playerStandings()
+    pp.pprint(standings)
     pairings = swissPairings()
-    if len(pairings) != 2:
+    pp.pprint(pairings)
+    if len(pairings) != 4:
         raise ValueError(
-            "For four players, swissPairings should return two pairs.")
-    [(pid1, pname1, pid2, pname2), (pid3, pname3, pid4, pname4)] = pairings
+            "For eight players, swissPairings should return four pairs.")
+    [
+        (pid1, pname1, pid2, pname2),
+        (pid3, pname3, pid4, pname4),
+        (pid5, pname5, pid6, pname6),
+        (pid7, pname7, pid8, pname8)
+    ] = pairings
     correct_pairs = set([frozenset([id1, id3]), frozenset([id2, id4])])
-    actual_pairs = set([frozenset([pid1, pid2]), frozenset([pid3, pid4])])
+    actual_pairs = set([frozenset([pid1, pid2]), frozenset([pid7, pid8])])
+    pp.pprint(correct_pairs)
+    pp.pprint(actual_pairs)
     if correct_pairs != actual_pairs:
         raise ValueError(
             "After one match, players with one win should be paired.")

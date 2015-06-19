@@ -79,17 +79,23 @@ def playerStandings():
             players.id,
             players.name,
             COUNT(
-                CASE WHEN matches.winner_id = players.id
+                CASE WHEN matches.tie IS NULL
+                  AND matches.winner_id = players.id
                     THEN 1
                     ELSE NULL
                 END) AS wins,
-            COUNT(matches.id) AS matches
+            COUNT(matches.id) AS matches,
+            COUNT(
+                CASE WHEN matches.tie IS NOT NULL
+                    THEN 1
+                    ELSE NULL
+                END) AS ties
         FROM players
         LEFT JOIN matches
             ON matches.winner_id = players.id
             OR matches.challenger_id = players.id
         GROUP BY players.id
-        ORDER BY wins DESC, matches, players.id
+        ORDER BY wins DESC, ties DESC, matches, players.id
         '''
     sth.execute(query)
     result = sth.fetchall()
@@ -98,7 +104,7 @@ def playerStandings():
     return result
 
 
-def reportMatch(winner, loser):
+def reportMatch(winner, loser, tied=None):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -107,8 +113,8 @@ def reportMatch(winner, loser):
     """
     dbh = connect()
     sth = dbh.cursor()
-    query = "INSERT INTO matches (winner_id, challenger_id) VALUES (%s, %s)"
-    values = [winner, loser]
+    query = "INSERT INTO matches (winner_id, challenger_id, tie) VALUES (%s, %s, %s)"
+    values = [winner, loser, tied]
     sth.execute(query, values)
     dbh.commit()
     dbh.close()
