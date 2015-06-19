@@ -136,6 +136,8 @@ def testPairings():
     # pp.pprint(standings)
 
     reportMatch(id1, id3)
+    opponents = getPlayerOpponents()
+    pp.pprint(opponents)
     pairings = swissPairings()
     pp.pprint(pairings)
 
