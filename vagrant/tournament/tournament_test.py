@@ -157,6 +157,18 @@ def testPairings():
         raise ValueError(
             "After one match, players with one win should be paired.")
 
+    incorrect_pairs = set([
+        frozenset([id5, id6]),
+        frozenset([id7, id8]),
+        ])
+    print "incorrect pairs"
+    pp.pprint(incorrect_pairs)
+    if not incorrect_pairs.isdisjoint(actual_pairs):
+        raise ValueError(
+            "After one match, players should not play the same challenger\
+             again.")
+
+
     print "8. After one match, players with one win are paired."
 
 

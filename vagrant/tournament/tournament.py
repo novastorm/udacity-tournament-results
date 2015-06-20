@@ -229,6 +229,14 @@ def swissPairings():
         if len(pending_players) == 0 and len(standings_groups) > 0:
                 pending_players.update(set(standings_groups.pop(0)))
 
+        print "player info", player
+        print opponents[player[0]]
+        if challenger[0] in opponents[player[0]]:
+            print "*** find new challenger ***"
+            new_challenger = pending_players.pop()
+            pending_players.add(challenger)
+            challenger = new_challenger
+
         print "player, challenger", (player, challenger)
         pairs.append((player[0], player[1], challenger[0], challenger[1]))
         print "pairs"
