@@ -4,6 +4,9 @@
 #
 
 import psycopg2
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
 
 
 def connect():
@@ -119,6 +122,67 @@ def reportMatch(winner, loser, tied=None):
     dbh.commit()
     dbh.close()
 
+def __getPlayerOpponents():
+    """Returns list of opponents for all players
+    """
+    dbh = connect()
+    sth = dbh.cursor()
+    query = '''
+        WITH opponents AS (
+            SELECT players.id, players.name, challenger_id
+            FROM players
+            JOIN matches
+                ON matches.winner_id = players.id
+            UNION
+            SELECT players.id, players.name, winner_id AS challenger_id
+            FROM players
+            JOIN matches
+                ON matches.challenger_id = players.id
+        )
+        SELECT
+            opponents.id,
+            opponents.name,
+            array_agg(challenger_id) AS challenger_id_list
+        FROM opponents
+        GROUP BY opponents.id, opponents.name
+        '''
+    sth.execute(query)
+    result = sth.fetchall()
+    dbh.commit()
+    dbh.close()
+
+    return result
+
+def __getStandingGroups():
+    """Returns a list of standings grouped by win, tie, loss
+
+    Assuming standings are provided ordered by win, tie, loss, each standings
+    group contains players with equivalent standings
+
+    Returns:
+      A list of sets, each of which contains ()
+    """
+    standings = playerStandings()
+
+    standings_groups = []
+    group = set()
+    # set initial standings
+    (win, tie, loss) = standings[0][2:5]
+    for player in standings:
+        # test if player standings does not match current standings
+        if ((win, tie, loss) != player[2:5]):
+            # append current player group to the standings group
+            standings_groups.append(group.copy())
+            # set new standings
+            (win, tie, loss) = player[2:5]
+            # reset group
+            group.clear()
+        # add (player id, player name) to group of players
+        group.add(player[0:2])
+    # add last group to standings_groups
+    standings_groups.append(group.copy())
+
+    return standings_groups
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -135,13 +199,35 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    standings = playerStandings()
 
-    # pairing every other record by spliting standings into two lists,
-    # one of even elements, the other of odd elements. zip together the
-    # results and map to create the output format
-    result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
-        zip(standings[0::2],standings[1::2]))
+    # reduce opponents to a dictionary of player_id and the set of their
+    # previously played opponent_id
+    opponents = {}
+    for (id, name, cid_list) in __getPlayerOpponents():
+        opponents[id] = set(cid_list)
 
-    return result
+    standings_groups = __getStandingGroups()
+
+    pending_players = set()
+    pending_players.update(set(standings_groups.pop(0)))
+    pairs = []
+    player = None
+    challenger = None
+    while len(pending_players) > 0:
+        player = pending_players.pop()
+        # if pending players == 1 add players from next group
+        if len(pending_players) == 0 and len(standings_groups) > 0:
+                pending_players.update(set(standings_groups.pop(0)))
+        challenger = pending_players.pop()
+        if len(pending_players) == 0 and len(standings_groups) > 0:
+                pending_players.update(set(standings_groups.pop(0)))
+
+        if challenger[0] in opponents[player[0]]:
+            new_challenger = pending_players.pop()
+            pending_players.add(challenger)
+            challenger = new_challenger
+
+        pairs.append((player[0], player[1], challenger[0], challenger[1]))
+
+    return pairs
 
