@@ -206,12 +206,7 @@ def swissPairings():
     for (id, name, cid_list) in __getPlayerOpponents():
         opponents[id] = set(cid_list)
 
-    print("opponents")
-    pp.pprint(opponents)
-
     standings_groups = __getStandingGroups()
-    print("standings_groups")
-    pp.pprint(standings_groups)
 
     pending_players = set()
     pending_players.update(set(standings_groups.pop(0)))
@@ -219,8 +214,6 @@ def swissPairings():
     player = None
     challenger = None
     while len(pending_players) > 0:
-        print "pending_players"
-        pp.pprint(pending_players)
         player = pending_players.pop()
         # if pending players == 1 add players from next group
         if len(pending_players) == 0 and len(standings_groups) > 0:
@@ -229,25 +222,12 @@ def swissPairings():
         if len(pending_players) == 0 and len(standings_groups) > 0:
                 pending_players.update(set(standings_groups.pop(0)))
 
-        print "player info", player
-        print opponents[player[0]]
         if challenger[0] in opponents[player[0]]:
-            print "*** find new challenger ***"
             new_challenger = pending_players.pop()
             pending_players.add(challenger)
             challenger = new_challenger
 
-        print "player, challenger", (player, challenger)
         pairs.append((player[0], player[1], challenger[0], challenger[1]))
-        print "pairs"
-        pp.pprint(pairs)
-
-    # pairing every other record by spliting standings into two lists,
-    # one of even elements, the other of odd elements. zip together the
-    # results and map to create the output format
-    # result = map(lambda (x, y) : (x[0], x[1], y[0], y[1]),
-    #     zip(standings[0::2],standings[1::2]))
-
 
     return pairs
 
