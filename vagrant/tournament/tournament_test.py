@@ -3,9 +3,7 @@
 # Test cases for tournament.py
 
 from tournament import *
-import pprint
 
-pp = pprint.PrettyPrinter(indent=4)
 
 def testDeleteMatches():
     deleteMatches()
@@ -129,7 +127,6 @@ def testPairings():
     standings = playerStandings()
 
     pairings = swissPairings()
-    pp.pprint(pairings)
 
     if len(pairings) != 4:
         raise ValueError(
@@ -170,9 +167,6 @@ def testPairings():
         frozenset([id2, id4])
         ])
 
-    pp.pprint(incorrect_pairs)
-    pp.pprint(playerStandings())
-    pp.pprint(swissPairings())
     actual_pairs = set(map(
         lambda (p_id, p_name, c_id, c_name) : frozenset([p_id, c_id]),
             swissPairings()
