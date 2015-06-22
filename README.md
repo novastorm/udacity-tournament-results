@@ -27,4 +27,4 @@ Login to the instance:
 Change to the project directory and run the test suite
 
     cd /vagrant/tournament
-    python tournament.py
+    python tournament_test.py
