@@ -5,7 +5,7 @@ pip install bleach
 su postgres -c 'createuser -dRS vagrant'
 su vagrant -c 'createdb'
 su vagrant -c 'createdb tournament'
-# su vagrant -c 'psql tournament -f /vagrant/tournament/tournament.sql'
+su vagrant -c 'psql tournament -f /vagrant/tournament/tournament.sql'
 
 vagrantTip="[35m[1mThe shared directory is located at /vagrant\nTo access your shared files: cd /vagrant(B[m"
 echo -e $vagrantTip > /etc/motd
