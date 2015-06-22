@@ -2,6 +2,15 @@
 #
 # tournament.py -- implementation of a Swiss-system tournament
 #
+# Allows recording of tied matches.
+# Matches opponents of relative standings.
+# Pairs players in unique matches.
+#
+# TODO: implement match byes
+# TODO: implement pairing for odd number of players
+# TODO: implement Opponent match win tie breaker algorithm
+# TODO: implement tournament tracking
+#
 
 import psycopg2
 import pprint
