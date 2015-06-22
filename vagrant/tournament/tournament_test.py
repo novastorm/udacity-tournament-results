@@ -129,6 +129,7 @@ def testPairings():
     standings = playerStandings()
 
     pairings = swissPairings()
+    pp.pprint(pairings)
 
     if len(pairings) != 4:
         raise ValueError(
@@ -147,9 +148,35 @@ def testPairings():
             "After one match, players with one win should be paired.")
 
     incorrect_pairs = set([
+        frozenset([id1, id2]),
+        frozenset([id3, id4]),
         frozenset([id5, id6]),
-        frozenset([id7, id8]),
+        frozenset([id7, id8])
         ])
+    if not incorrect_pairs.isdisjoint(actual_pairs):
+        raise ValueError(
+            "After one match, players should not play the same challenger"
+            "again.")
+
+    reportMatch(id1, id3)
+    reportMatch(id5, id7)
+    reportMatch(id6, id8)
+    reportMatch(id2, id4)
+
+    incorrect_pairs.update([
+        frozenset([id1, id3]),
+        frozenset([id5, id7]),
+        frozenset([id6, id8]),
+        frozenset([id2, id4])
+        ])
+
+    pp.pprint(incorrect_pairs)
+    pp.pprint(playerStandings())
+    pp.pprint(swissPairings())
+    actual_pairs = set(map(
+        lambda (p_id, p_name, c_id, c_name) : frozenset([p_id, c_id]),
+            swissPairings()
+        ))
     if not incorrect_pairs.isdisjoint(actual_pairs):
         raise ValueError(
             "After one match, players should not play the same challenger"
