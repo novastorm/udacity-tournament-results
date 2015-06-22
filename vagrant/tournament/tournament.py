@@ -157,8 +157,6 @@ def getStandingGroups():
     # add last group to standings_groups
     standings_groups.append(group.copy())
 
-    pp.pprint(standings_groups)
-
     return standings_groups
 
 def swissPairings():
