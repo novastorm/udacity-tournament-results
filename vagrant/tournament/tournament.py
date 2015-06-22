@@ -78,27 +78,7 @@ def playerStandings():
     dbh = connect()
     sth = dbh.cursor()
     query = '''
-        SELECT
-            players.id,
-            players.name,
-            COUNT(
-                CASE WHEN matches.tie IS NULL
-                  AND matches.winner_id = players.id
-                    THEN 1
-                    ELSE NULL
-                END) AS wins,
-            COUNT(matches.id) AS matches,
-            COUNT(
-                CASE WHEN matches.tie IS NOT NULL
-                    THEN 1
-                    ELSE NULL
-                END) AS ties
-        FROM players
-        LEFT JOIN matches
-            ON matches.winner_id = players.id
-            OR matches.challenger_id = players.id
-        GROUP BY players.id
-        ORDER BY wins DESC, ties DESC, matches, players.id
+        SELECT * FROM standings
         '''
     sth.execute(query)
     result = sth.fetchall()
@@ -107,44 +87,37 @@ def playerStandings():
     return result
 
 
-def reportMatch(winner, loser, tied=None):
+def reportMatch(winner, challenger, tied=None):
     """Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
-      loser:  the id number of the player who lost
+      challenger:  the id number of the player who lost
     """
     dbh = connect()
     sth = dbh.cursor()
     query = "INSERT INTO matches (winner_id, challenger_id, tie) VALUES (%s, %s, %s)"
-    values = [winner, loser, tied]
+    values = [winner, challenger, tied]
     sth.execute(query, values)
     dbh.commit()
     dbh.close()
 
-def __getPlayerOpponents():
+def getPlayerOpponents():
     """Returns list of opponents for all players
+
+    Returns:
+      A list of tuples, each of which contains (id, list)
+        id: player's unique id
+        list: list of opponent id
     """
     dbh = connect()
     sth = dbh.cursor()
     query = '''
-        WITH opponents AS (
-            SELECT players.id, players.name, challenger_id
-            FROM players
-            JOIN matches
-                ON matches.winner_id = players.id
-            UNION
-            SELECT players.id, players.name, winner_id AS challenger_id
-            FROM players
-            JOIN matches
-                ON matches.challenger_id = players.id
-        )
         SELECT
             opponents.id,
-            opponents.name,
             array_agg(challenger_id) AS challenger_id_list
         FROM opponents
-        GROUP BY opponents.id, opponents.name
+        GROUP BY opponents.id
         '''
     sth.execute(query)
     result = sth.fetchall()
@@ -153,34 +126,38 @@ def __getPlayerOpponents():
 
     return result
 
-def __getStandingGroups():
+def getStandingGroups():
     """Returns a list of standings grouped by win, tie, loss
 
-    Assuming standings are provided ordered by win, tie, loss, each standings
+    Assuming standings are provided ordered by (win, match, tie), each standings
     group contains players with equivalent standings
 
     Returns:
-      A list of sets, each of which contains ()
+      A list of sets of tuples, each of which contains (id, name)
+        id: player's unique ID
+        name: player's name
     """
     standings = playerStandings()
 
     standings_groups = []
     group = set()
     # set initial standings
-    (win, tie, loss) = standings[0][2:5]
+    (win, match, tie) = standings[0][2:5]
     for player in standings:
         # test if player standings does not match current standings
-        if ((win, tie, loss) != player[2:5]):
+        if ((win, match, tie) != player[2:5]):
             # append current player group to the standings group
             standings_groups.append(group.copy())
             # set new standings
-            (win, tie, loss) = player[2:5]
+            (win, match, tie) = player[2:5]
             # reset group
             group.clear()
         # add (player id, player name) to group of players
         group.add(player[0:2])
     # add last group to standings_groups
     standings_groups.append(group.copy())
+
+    pp.pprint(standings_groups)
 
     return standings_groups
 
@@ -203,10 +180,10 @@ def swissPairings():
     # reduce opponents to a dictionary of player_id and the set of their
     # previously played opponent_id
     opponents = {}
-    for (id, name, cid_list) in __getPlayerOpponents():
+    for (id, cid_list) in getPlayerOpponents():
         opponents[id] = set(cid_list)
 
-    standings_groups = __getStandingGroups()
+    standings_groups = getStandingGroups()
 
     pending_players = set()
     pending_players.update(set(standings_groups.pop(0)))
@@ -215,9 +192,10 @@ def swissPairings():
     challenger = None
     while len(pending_players) > 0:
         player = pending_players.pop()
-        # if pending players == 1 add players from next group
+        # if no more pending players add players from next group
         if len(pending_players) == 0 and len(standings_groups) > 0:
                 pending_players.update(set(standings_groups.pop(0)))
+
         challenger = pending_players.pop()
         if len(pending_players) == 0 and len(standings_groups) > 0:
                 pending_players.update(set(standings_groups.pop(0)))
